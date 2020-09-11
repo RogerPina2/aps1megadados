@@ -36,6 +36,18 @@ def create_task(task: Task):
 
     return {"task":task, "taskDB": taskDB}
 
+@app.patch("/task/{taskId}/description")
+def update_taskDescription(taskId: int, description: str):
+    if description:
+        taskDB["tasks"][taskId].description = description
+    return taskDB["tasks"][taskId]
+
+@app.patch("/task/{taskId}/complete")
+def update_taskCompletion(taskId: int, complete: bool):
+    if complete:
+        taskDB["tasks"][taskId].complete = complete
+    return taskDB["tasks"][taskId]
+
 @app.delete("/task/{taskId}")
 def remove_task(taskId: int):
     if taskId in taskDB["tasks"]:
