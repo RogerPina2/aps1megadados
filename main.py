@@ -28,11 +28,10 @@ def read_root():
         }
     }
 
-
 @app.post("/task/")
 def create_task(task: Task):    
     taskId = taskDB["taskQuantity"]
-    taskDB["tasks"][taskId] = task
+    taskDB["tasks"][taskId] = task.dict()
     taskDB["taskQuantity"] += 1
 
     return {"task":task, "taskDB": taskDB}
@@ -64,7 +63,8 @@ def read_tasks():
 @app.get("/tasks/complete")
 def read_complete_tasks():
     completeTasks = {}
-    for key, task in taskDB["tasks"].items():
+    for key, stored_task in taskDB["tasks"].items():
+        task = Task(**stored_task)
         if task.complete == True:
             completeTasks[key] = task
             
@@ -74,10 +74,9 @@ def read_complete_tasks():
 @app.get("/tasks/incomplete")
 def read_incomplete_tasks():
     incompleteTasks = {}
-    for key, task in taskDB["tasks"].items():
+    for key, stored_task in taskDB["tasks"].items():
+        task = Task(**stored_task)
         if task.complete == False:
             incompleteTasks[key] = task
             
-    return { "tasks": incompleteTasks }
-
-
+    return {"tasks": incompleteTasks }
