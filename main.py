@@ -96,9 +96,15 @@ async def read_task(uuid_: uuid.UUID):
     summary='Replaces a task',
     description='Replaces a task identified by its UUID.',
 )
-async def replace_task(uuid_: uuid.UUID, item: Task):
-    try:
-        tasks[uuid_] = item
+async def replace_task(uuid_: uuid.UUID, item: Task):        
+    try: 
+        if uuid_ in tasks.keys(): 
+            tasks[uuid_] = item
+        else:
+            raise HTTPException(
+                status_code=404,
+                detail='Task not found',
+            ) from KeyError
     except KeyError as exception:
         raise HTTPException(
             status_code=404,
@@ -114,8 +120,14 @@ async def replace_task(uuid_: uuid.UUID, item: Task):
 )
 async def alter_task(uuid_: uuid.UUID, item: Task):
     try:
-        update_data = item.dict(exclude_unset=True)
-        tasks[uuid_] = tasks[uuid_].copy(update=update_data)
+        if uuid_ in tasks.keys(): 
+            update_data = item.dict(exclude_unset=True)
+            tasks[uuid_] = tasks[uuid_].copy(update=update_data)
+        else:
+            raise HTTPException(
+                status_code=404,
+                detail='Task not found',
+            ) from KeyError
     except KeyError as exception:
         raise HTTPException(
             status_code=404,
