@@ -1,185 +1,139 @@
-from typing import Optional, List
-from fastapi import FastAPI, Path, Query, Body
-from pydantic import BaseModel
-from fastapi.encoders import jsonable_encoder
+# pylint: disable=missing-module-docstring, missing-function-docstring, missing-class-docstring
+import uuid
+
+from typing import Optional, Dict
+
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, Field
+
+
+# pylint: disable=too-few-public-methods
+class Task(BaseModel):
+    description: Optional[str] = Field(
+        'no description',
+        title='Task description',
+        max_length=1024,
+    )
+    completed: Optional[bool] = Field(
+        False,
+        title='Shows whether the task was completed',
+    )
+
+    class Config:
+        schema_extra = {
+            'example': {
+                'description': 'Buy baby diapers',
+                'completed': False,
+            }
+        }
+
 
 tags_metadata = [
     {
-        "name": "tasks",
-        "description": "Operations with tasks.",
-    },
-    {
-        "name": "filter",
-        "description": "Operations that filter a data base item by some parameter.",
-    },
-    {
-        "name": "create",
-        "description": "Operations that create a data base item.",
-    },
-    {
-        "name": "update",
-        "description": "Operations that modify a data base item.",
-    },
-    {
-        "name": "delete",
-        "description": "Operations that delete a data base item.",
+        'name': 'task',
+        'description': 'Operations related to tasks.',
     },
 ]
 
 app = FastAPI(
-    title="APS1 MEGADADOS",
-    description="This is a very fancy MEGADADOS project, with auto docs for the API and everything",
-    version="1.0.0",
-    openapi_tags=tags_metadata
+    title='Task list',
+    description='Task-list project for the **Megadados** course',
+    openapi_tags=tags_metadata,
 )
 
-taskDB = {
-    "taskQuantity": 0,
-    "tasks": {}
-    }
+tasks = {}
 
-class Task(BaseModel):
-    name: str
-    description: str
-    complete: bool = False
 
-# Root route project
-@app.get("/")
-def read_root():
-    """
-        This function returns some informations about the project and members.
-    """
+@app.get(
+    '/task',
+    tags=['task'],
+    summary='Reads task list',
+    description='Reads the whole task list.',
+    response_model=Dict[uuid.UUID, Task],
+)
+async def read_tasks(completed: bool = None):
+    if completed is None:
+        return tasks
     return {
-        "title":"APS 1",
-        "subject": "Megadados",
-        "members": {
-            "Gabriel Zanneti": {
-                "email":"gabrielztk@al.insper.edu.br",
-                "github":"gabrielztk"
-                },
-            "Roger Pina": { 
-                "email": "rogerrfp@al.insper.edu.br", 
-                "github": "RogerPina2"
-                }
-        }
+        uuid_: item
+        for uuid_, item in tasks.items() if item.completed == completed
     }
 
-# List all tasks
-@app.get("/tasks/", tags=["tasks"])
-def read_tasks():
-    """
-        This function lists all tasks in the database taskDB.
-    """
-    return { "tasks": taskDB["tasks"] }
 
-# List all complete tasks
-@app.get("/tasks/complete", tags=["tasks", "filter"])
-def read_complete_tasks():
-    """
-        This function lists all tasks in the database taskDB that are complete.
-    """
-    completeTasks = {}
-    for key, stored_task in taskDB["tasks"].items():
-        task = Task(**stored_task)
-        if task.complete == True:
-            completeTasks[key] = task
-            
-    return { "tasks": completeTasks }
- 
-# List all incomplete tasks
-@app.get("/tasks/incomplete", tags=["tasks", "filter"])
-def read_incomplete_tasks():
-    """
-        This function lists all tasks in the database taskDB that are incomplete.
-    """
-    incompleteTasks = {}
-    for key, stored_task in taskDB["tasks"].items():
-        task = Task(**stored_task)
-        if task.complete == False:
-            incompleteTasks[key] = task
-            
-    return {"tasks": incompleteTasks }
+@app.post(
+    '/task',
+    tags=['task'],
+    summary='Creates a new task',
+    description='Creates a new task and returns its UUID.',
+    response_model=uuid.UUID,
+)
+async def create_task(item: Task):
+    uuid_ = uuid.uuid4()
+    tasks[uuid_] = item
+    return uuid_
 
 
-# Create task
-@app.post("/task/", tags=["tasks", "create"])
-def create_task(
-    task: Task = Body(
-        ..., 
-        title="New task",
-        description="The contents of the new task"
-        )
-    ):
-    """
-        This function creates a task with the model of class Task and saves it in database taskDB.
-    """
-    taskId = taskDB["taskQuantity"]
-    taskDB["tasks"][taskId] = task.dict()
-    taskDB["taskQuantity"] += 1
-
-    return {"task":task}
-
-# Update task description
-@app.patch("/task/{taskId}/description", tags=["tasks", "update"])
-def update_taskDescription(
-    *,
-    taskId: int = Path(
-        ..., 
-        title="Task ID", 
-        description="The ID of the task to get", 
-        ge=0
-        ), 
-    description: str = Query(
-        ..., 
-        title="Task description", 
-        description="The new description of the task"
-        )
-    ):
-    """
-        This function updates the description of task by ID.
-    """
-    if description:
-        taskDB["tasks"][taskId]["description"] = description
-    return taskDB["tasks"][taskId]
+@app.get(
+    '/task/{uuid_}',
+    tags=['task'],
+    summary='Reads task',
+    description='Reads task from UUID.',
+    response_model=Task,
+)
+async def read_task(uuid_: uuid.UUID):
+    try:
+        return tasks[uuid_]
+    except KeyError as exception:
+        raise HTTPException(
+            status_code=404,
+            detail='Task not found',
+        ) from exception
 
 
-# Update task status
-@app.patch("/task/{taskId}/complete", tags=["tasks", "update"])
-def update_taskCompletion(
-    *,
-    taskId: int = Path(
-        ..., 
-        title="Task ID", 
-        description="The ID of the task to get", 
-        ge=0
-        ), 
-    complete: bool = Query(
-        ..., 
-        title="Task completion", 
-        description="The new status of the task"
-        )
-    ):
-    """
-        This function updates the status of task by ID.
-    """
-    if complete:
-        taskDB["tasks"][taskId]["complete"] = complete
-    return taskDB["tasks"][taskId]
+@app.put(
+    '/task/{uuid_}',
+    tags=['task'],
+    summary='Replaces a task',
+    description='Replaces a task identified by its UUID.',
+)
+async def replace_task(uuid_: uuid.UUID, item: Task):
+    try:
+        tasks[uuid_] = item
+    except KeyError as exception:
+        raise HTTPException(
+            status_code=404,
+            detail='Task not found',
+        ) from exception
 
-# Delete task by ID
-@app.delete("/task/{taskId}", tags=["tasks", "delete"])
-def remove_task(
-    *,
-    taskId: int = Path(
-        ..., 
-        title="Task ID", 
-        description="The ID of the task to get", 
-        ge=0
-        )
-    ):
-    """
-        This functions deletes the task by ID.
-    """
-    if taskId in taskDB["tasks"]:
-        del taskDB["tasks"][taskId]
-    return {"message": "Task deleted"}
+
+@app.patch(
+    '/task/{uuid_}',
+    tags=['task'],
+    summary='Alters task',
+    description='Alters a task identified by its UUID',
+)
+async def alter_task(uuid_: uuid.UUID, item: Task):
+    try:
+        update_data = item.dict(exclude_unset=True)
+        tasks[uuid_] = tasks[uuid_].copy(update=update_data)
+    except KeyError as exception:
+        raise HTTPException(
+            status_code=404,
+            detail='Task not found',
+        ) from exception
+
+
+@app.delete(
+    '/task/{uuid_}',
+    tags=['task'],
+    summary='Deletes task',
+    description='Deletes a task identified by its UUID',
+)
+async def remove_task(uuid_: uuid.UUID):
+    try:
+        del tasks[uuid_]
+    except KeyError as exception:
+        raise HTTPException(
+            status_code=404,
+            detail='Task not found',
+        ) from exception
