@@ -1,10 +1,6 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring, missing-class-docstring
 from fastapi import FastAPI, HTTPException, Depends
-
-try:
-    from api.routers import task
-except ImportError:
-    from aps1megadados.api.routers import task
+from api.routers import task
 
 
 
