@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from main import app
+from .main import app
 
 client = TestClient(app)
 
@@ -19,7 +19,7 @@ def test_read_task_list():
         This test verifies the verb HTTP 'get' on endpoint '/task' 
         The response status code must be 200 and the json data void is expected
     """
-    response = client.get('/task')
+    response = client.get('/task/')
     assert response.status_code == 200
     assert response.json() == {}
 
@@ -28,7 +28,7 @@ def test_read_completed_task_list():
         This test verifies the verb HTTP 'get' on endpoint '/task' with query '?completed=true'
         The response status code must be 200 and the json data void is expected
     """
-    response = client.get('/task?completed=true')
+    response = client.get('/task/?completed=true')
     assert response.status_code == 200
     assert response.json() == {}
 
@@ -37,7 +37,7 @@ def test_read_incompleted_task_list():
         This test verifies the verb HTTP 'get' on endpoint '/task' with query '?completed=false'
         The response status code must be 200 and the json data void is expected
     """
-    response = client.get('/task?completed=false')
+    response = client.get('/task/?completed=false')
     assert response.status_code == 200
     assert response.json() == {}
 
@@ -48,7 +48,7 @@ def test_create_task():
         The response status code must be 200
     """
     response = client.post(
-        '/task',
+        '/task/',
         json={
             'description': 'Some description',
             'completed': False
@@ -61,7 +61,7 @@ def test_create_task_with_invalid_bool_value():
         The completed value isn't a bool value, so the response status code must be 422
     """
     response = client.post(
-        '/task',
+        '/task/',
         json={
             'description': 'Some description',
             'completed': 'some invalid value'
@@ -82,7 +82,7 @@ def test_read_task_from_valid_uuid():
         The response status code must be 200 and the same json data used in created task is expected
     """
     post_response = client.post(
-        '/task',
+        '/task/',
         json={
             'description': 'Some description',
             'completed': False
@@ -132,7 +132,7 @@ def test_update_task_from_valid_uuid():
         The response status code must be 200 and the json data isn't expected
     """
     post_response = client.post(
-        '/task',
+        '/task/',
         json={
             'description': 'Some description',
             'completed': False
@@ -196,7 +196,7 @@ def test_partial_update_task_from_valid_uuid():
         The response status code must be 200 and the json data isn't expected
     """
     post_response = client.post(
-        '/task',
+        '/task/',
         json={
             'description': 'Some description',
             'completed': False
@@ -260,7 +260,7 @@ def test_delete_task_from_valid_uuid():
         The response status code must be 200 and the json data isn't expected
     """
     post_response = client.post(
-        '/task',
+        '/task/',
         json={
             'description': 'Some description',
             'completed': False

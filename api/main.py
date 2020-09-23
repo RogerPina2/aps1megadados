@@ -1,0 +1,29 @@
+# pylint: disable=missing-module-docstring, missing-function-docstring, missing-class-docstring
+from fastapi import FastAPI, HTTPException, Depends
+
+try:
+    from api.routers import task
+except ImportError:
+    from aps1megadados.api.routers import task
+
+
+
+tags_metadata = [
+    {
+        'name': 'task',
+        'description': 'Operations related to tasks.',
+    },
+]
+
+app = FastAPI(
+    title='Task list',
+    description='Task-list project for the **Megadados** course',
+    openapi_tags=tags_metadata,
+)
+
+app.include_router(
+    task.router,
+    prefix="/task",
+    tags=["tasks"],
+    responses={404: {"description": "Not found"}},
+)
