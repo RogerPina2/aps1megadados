@@ -1,16 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends
 import uuid
 from typing import Optional, Dict
-
-try:
-    from api.models import Task
-except ImportError:
-    from aps1megadados.api.models import Task
-
-try:
-    from api.database import get_db, DBSession
-except ImportError:
-    from aps1megadados.api.database import get_db, DBSession
+from api.models import Task
+from api.database import get_db, DBSession
 
 
 router = APIRouter()
