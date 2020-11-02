@@ -1,3 +1,5 @@
+USE tasklist;
+
 DROP TABLE IF EXISTS tasks;
 CREATE TABLE tasks (
     uuid BINARY(16) PRIMARY KEY,
