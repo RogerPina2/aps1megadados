@@ -16,11 +16,17 @@ class Task(BaseModel):
         title='Shows whether the task was completed',
     )
 
+    user_uuid: Optional[str] = Field(
+        title='User id',
+        max_length=1024,
+    )
+
     class Config:
         schema_extra = {
             'example': {
                 'description': 'Buy baby diapers',
                 'completed': False,
+                'user_uuid' : '1231233123',
             }
         }
 
