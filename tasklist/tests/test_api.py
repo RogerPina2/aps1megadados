@@ -24,6 +24,13 @@ def setup_database():
     secrets_file_name = utils.get_admin_secrets_filename()
     utils.run_all_scripts(scripts_dir, config_file_name, secrets_file_name)
 
+def setup_user():
+    user = { "name": "Gabriel Zanetti" }
+    response = client.post("/user", json=user)
+    assert response.status_code == 200
+    user_uuid = response.json()
+    return user_uuid
+
 
 def test_read_main_returns_not_found():
     setup_database()
@@ -41,43 +48,59 @@ def test_read_tasks_with_no_task():
 
 def test_create_and_read_some_tasks():
     setup_database()
+
+    # Task connected to user
+    # Create user to ude id
+    user_uuid = setup_user()
+
     tasks = [
         {
             "description": "foo",
-            "completed": False
+            "completed": False,
+            "user_uuid" : user_uuid
         },
         {
             "description": "bar",
-            "completed": True
+            "completed": True,
+            "user_uuid" : user_uuid
         },
         {
-            "description": "baz"
+            "description": "baz",
+            "user_uuid" : user_uuid
         },
         {
-            "completed": True
+            "completed": True,
+            "user_uuid" : user_uuid
         },
-        {},
+        {
+            "user_uuid" : user_uuid
+        },
     ]
     expected_responses = [
         {
             'description': 'foo',
-            'completed': False
+            'completed': False,
+            "user_uuid" : user_uuid
         },
         {
             'description': 'bar',
-            'completed': True
+            'completed': True,
+            "user_uuid" : user_uuid
         },
         {
             'description': 'baz',
-            'completed': False
+            'completed': False,
+            "user_uuid" : user_uuid
         },
         {
             'description': 'no description',
-            'completed': True
+            'completed': True,
+            "user_uuid" : user_uuid
         },
         {
             'description': 'no description',
-            'completed': False
+            'completed': False,
+            "user_uuid" : user_uuid
         },
     ]
 
@@ -120,14 +143,18 @@ def test_create_and_read_some_tasks():
 def test_substitute_task():
     setup_database()
 
+    # Task connected to user
+    # Create user to ude id
+    user_uuid = setup_user()
+
     # Create a task.
-    task = {'description': 'foo', 'completed': False}
+    task = {'description': 'foo', 'completed': False, "user_uuid" : user_uuid}
     response = client.post('/task', json=task)
     assert response.status_code == 200
     uuid_ = response.json()
 
     # Replace the task.
-    new_task = {'description': 'bar', 'completed': True}
+    new_task = {'description': 'bar', 'completed': True, "user_uuid" : user_uuid}
     response = client.put(f'/task/{uuid_}', json=new_task)
     assert response.status_code == 200
 
@@ -144,8 +171,12 @@ def test_substitute_task():
 def test_alter_task():
     setup_database()
 
+    # Task connected to user
+    # Create user to ude id
+    user_uuid = setup_user()
+
     # Create a task.
-    task = {'description': 'foo', 'completed': False}
+    task = {'description': 'foo', 'completed': False, 'user_uuid' : user_uuid}
     response = client.post('/task', json=task)
     assert response.status_code == 200
     uuid_ = response.json()
@@ -196,8 +227,12 @@ def test_delete_nonexistant_task():
 def test_delete_all_tasks():
     setup_database()
 
+    # Task connected to user
+    # Create user to ude id
+    user_uuid = setup_user()
+
     # Create a task.
-    task = {'description': 'foo', 'completed': False}
+    task = {'description': 'foo', 'completed': False, 'user_uuid' : user_uuid}
     response = client.post('/task', json=task)
     assert response.status_code == 200
     uuid_ = response.json()

@@ -58,7 +58,7 @@ class DBSession:
         with self.connection.cursor() as cursor:
             cursor.execute(
                 '''
-                SELECT description, completed, user_uuid
+                SELECT description, completed, BIN_TO_UUID(user_uuid)
                 FROM tasks
                 WHERE uuid = UUID_TO_BIN(%s)
                 ''',
@@ -78,7 +78,7 @@ class DBSession:
                 UPDATE tasks SET description=%s, completed=%s, user_uuid=UUID_TO_BIN(%s)
                 WHERE uuid=UUID_TO_BIN(%s)
                 ''',
-                (item.description, item.completed, item.user_uuid, str(uuid_)),
+                (item.description, item.completed, str(item.user_uuid), str(uuid_)),
             )
         self.connection.commit()
 
