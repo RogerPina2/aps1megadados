@@ -176,7 +176,7 @@ def test_alter_task():
     user_uuid = setup_user()
 
     # Create a task.
-    task = {'description': 'foo', 'completed': False}
+    task = {'description': 'foo', 'completed': False, 'user_uuid' : user_uuid}
     response = client.post('/task', json=task)
     assert response.status_code == 200
     uuid_ = response.json()
@@ -232,7 +232,7 @@ def test_delete_all_tasks():
     user_uuid = setup_user()
 
     # Create a task.
-    task = {'description': 'foo', 'completed': False}
+    task = {'description': 'foo', 'completed': False, 'user_uuid' : user_uuid}
     response = client.post('/task', json=task)
     assert response.status_code == 200
     uuid_ = response.json()
