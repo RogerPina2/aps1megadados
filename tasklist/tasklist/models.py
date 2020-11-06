@@ -32,8 +32,8 @@ class Task(BaseModel):
 
 class User(BaseModel):
     name: Optional[str] = Field(
-        'no description',
-        title='Task description',
+        'no name',
+        title='Task name',
         max_length=64,
     )
 
